@@ -1,7 +1,8 @@
 buildscript {
 	repositories {
-		maven { url 'https://repo.spring.io/plugins-release' }
+		maven { url 'https://repo1.maven.org/maven2/' }
 		maven { url 'https://plugins.gradle.org/m2/' }
+		maven { url 'https://repo.spring.io/plugins-release/' }
 	}
 	dependencies {
 		classpath("org.springframework.build.gradle:propdeps-plugin:0.0.7")
@@ -14,7 +15,7 @@ buildscript {
 
 def sampleServerProjects() {
 	subprojects.findAll { project ->
-		project.name.contains('sec-server') && project.name != 'spring-security-kerberos-samples-common'
+		project.name.contains('sec-server') && project.name != 'spring-security-kerberos-samples'
 	}
 }
 
@@ -26,8 +27,6 @@ def sampleClientProjects() {
 
 configure(allprojects) {
 	apply plugin: 'java'
-	apply plugin: 'eclipse'
-	apply plugin: 'idea'
 	apply plugin: 'propdeps'
 
 	group = 'org.springframework.security.kerberos'
@@ -42,13 +41,6 @@ configure(allprojects) {
 	repositories {
 		mavenCentral()
 		maven { url 'https://repo.spring.io/libs-release' }
-	}
-
-	// servlet-api (2.5) and tomcat-servlet-api (3.0) classpath entries should not be
-	// exported to dependent projects in Eclipse to avoid false compilation errors due
-	// to changing APIs across these versions
-	eclipse.classpath.file.whenMerged { classpath ->
-		classpath.entries.findAll { entry -> entry.path.contains('servlet-api') }*.exported = false
 	}
 }
 
@@ -134,7 +126,6 @@ project('spring-security-kerberos-client') {
 
 		optional("org.springframework.security:spring-security-ldap:$springSecurityVersion")
 
-		testCompile project(":spring-security-kerberos-test")
 		testCompile project(":spring-security-kerberos-web")
 		testCompile "org.springframework.security:spring-security-config:$springSecurityVersion"
 		testCompile "org.springframework.boot:spring-boot-autoconfigure:$springBootVersion"
@@ -144,47 +135,13 @@ project('spring-security-kerberos-client') {
 	}
 }
 
-project('spring-security-kerberos-test') {
-	description = 'Spring Security Kerberos Test'
-
-	configurations {
-		all*.exclude group: "org.apache.directory.api", module: "api-ldap-schema-data"
-	}
-
-	dependencies {
-		compile "junit:junit:$junitVersion"
-		compile "org.apache.directory.server:apacheds-core-api:$apacheDirServerVersion"
-		compile "org.apache.directory.server:apacheds-interceptor-kerberos:$apacheDirServerVersion"
-		compile "org.apache.directory.server:apacheds-protocol-shared:$apacheDirServerVersion"
-		compile "org.apache.directory.server:apacheds-protocol-kerberos:$apacheDirServerVersion"
-		compile "org.apache.directory.server:apacheds-ldif-partition:$apacheDirServerVersion"
-		compile "org.apache.directory.server:apacheds-mavibot-partition:$apacheDirServerVersion"
-		compile "org.apache.directory.server:apacheds-jdbm-partition:$apacheDirServerVersion"
-		compile "org.apache.directory.server:apacheds-protocol-ldap:$apacheDirServerVersion"
-		compile("org.apache.directory.api:api-all:$apacheDirApiVersion") {
-			exclude group: "xml-apis", module: "xml-apis"
-			exclude group: "xpp3", module: "xpp3"
-			exclude group: "dom4j", module: "dom4j"
-		}
-	}
-}
-
-project('spring-security-kerberos-samples-common') {
-	// don't publish boot packaged samples
-	configurations.archives.artifacts.removeAll { it.archiveTask.is jar }
-	tasks.findByPath("artifactoryPublish")?.enabled = false
-	dependencies {
-		compile project(":spring-security-kerberos-core")
-	}
-}
-
 configure(sampleServerProjects()) {
 	apply plugin: 'spring-boot'
 	// don't publish boot packaged samples
-	configurations.archives.artifacts.removeAll { it.archiveTask.is jar }
+	configurations.archives.artifacts.removeAll { it.type == 'jar' }
 	tasks.findByPath("artifactoryPublish")?.enabled = false
 	dependencies {
-		compile project(":spring-security-kerberos-samples-common")
+		compile project(":spring-security-kerberos-samples")
 		compile project(":spring-security-kerberos-client")
 		compile project(":spring-security-kerberos-web")
 		compile "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
@@ -206,10 +163,10 @@ configure(sampleServerProjects()) {
 configure(sampleClientProjects()) {
 	apply plugin: 'spring-boot'
 	// don't publish boot packaged samples
-	configurations.archives.artifacts.removeAll { it.archiveTask.is jar }
+	configurations.archives.artifacts.removeAll { it.type == 'jar' }
 	tasks.findByPath("artifactoryPublish")?.enabled = false
 	dependencies {
-		compile project(":spring-security-kerberos-samples-common")
+		compile project(":spring-security-kerberos-samples")
 		compile project(":spring-security-kerberos-client")
 		compile "org.springframework:spring-tx:$springVersion"
 		compile "org.springframework:spring-jdbc:$springVersion"
@@ -389,9 +346,9 @@ configure(rootProject) {
 		archives distZip
 	}
 
-	task wrapper(type: Wrapper) {
+	task wrapper2(type: Wrapper) {
 		description = 'Generates gradlew[.bat] scripts'
-		gradleVersion = '2.2.1'
+		gradleVersion = '5.6.4'
 	}
 
 }
