@@ -34,7 +34,7 @@ configure(allprojects) {
 	sourceCompatibility=1.6
 	targetCompatibility=1.6
 
-	[compileJava, compileTestJava]*.options*.compilerArgs = ['-Xlint:none']
+	[compileJava]*.options*.compilerArgs = ['-Xlint:none']
 
 	test.systemProperty("java.awt.headless", "true")
 
@@ -205,80 +205,10 @@ configure(rootProject) {
 		version = '1.5.2'
 	}
 
-	asciidoctor {
-		sourceDir = file("docs/src/reference/asciidoc")
-		backends = ['docbook5']
-		options eruby: 'erubis'
-		attributes docinfo: '',
-			copycss : '',
-			icons : 'font',
-			'source-highlighter': 'prettify',
-			sectanchors : '',
-			toc2: '',
-			idprefix: '',
-			idseparator: '-',
-			doctype: 'book',
-			numbered: '',
-			'spring-version' : springVersion,
-			'spring-security-version' : springSecurityVersion,
-			revnumber : project.version
-	}
-
-	task copyDocsSamples(type: Copy) {
-		from 'spring-security-kerberos-web/src/test/java/org/springframework/security/kerberos/docs/'
-		from 'spring-security-kerberos-web/src/test/resources/org/springframework/security/kerberos/docs/'
-		from 'spring-security-kerberos-client/src/test/java/org/springframework/security/kerberos/client/docs/'
-		include '**/*.java'
-		include '**/*.xml'
-		into 'docs/src/reference/asciidoc/samples'
-	}
-	asciidoctor.dependsOn copyDocsSamples
-
-
 	// don't publish the default jar for the root project
 	configurations.archives.artifacts.clear()
 
-	task api(type: Javadoc) {
-		group = 'Documentation'
-		description = 'Generates aggregated Javadoc API documentation.'
-		title = "${rootProject.description} ${version} API"
-		options.memberLevel = org.gradle.external.javadoc.JavadocMemberLevel.PROTECTED
-		options.author = true
-		options.header = rootProject.description
-		options.splitIndex = true
-		options.links(
-			'https://docs.jboss.org/jbossas/javadoc/4.0.5/connector'
-		)
-		source subprojects.collect { project ->
-			project.sourceSets.main.allJava
-		}
-		destinationDir = new File(buildDir, "api")
-		classpath = files(subprojects.collect { project ->
-			project.sourceSets.main.compileClasspath
-		})
-		maxMemory = '1024m'
-	}
-
-	task docsZip(type: Zip) {
-		group = 'Distribution'
-		classifier = 'docs'
-		description = "Builds -${classifier} archive containing api and reference " +
-			"for deployment at static.springframework.org/spring-security-kerberos/docs."
-
-		from('src/dist') {
-			include 'changelog.txt'
-		}
-
-		from (api) {
-			into 'api'
-		}
-
-		from (reference) {
-			into 'reference'
-		}
-	}
-
-	task distZip(type: Zip, dependsOn: [docsZip]) {
+	task distZip(type: Zip) {
 		group = 'Distribution'
 		classifier = 'dist'
 		description = "Builds -${classifier} archive, containing all jars and docs, " +
@@ -292,10 +222,6 @@ configure(rootProject) {
 			include 'notice.txt'
 			into "${baseDir}"
 			expand(copyright: new Date().format('yyyy'), version: project.version)
-		}
-
-		from(zipTree(docsZip.archivePath)) {
-			into "${baseDir}/docs"
 		}
 
 		subprojects.each { subproject ->
@@ -342,7 +268,6 @@ configure(rootProject) {
 	}
 
 	artifacts {
-		archives docsZip
 		archives distZip
 	}
 
