@@ -7,21 +7,9 @@ buildscript {
 	dependencies {
 		classpath("org.springframework.build.gradle:propdeps-plugin:0.0.7")
 		classpath("org.springframework.build.gradle:spring-io-plugin:0.0.3.RELEASE")
-		classpath('org.asciidoctor:asciidoctor-gradle-plugin:1.5.2')
+		classpath('org.asciidoctor:asciidoctor-gradle-plugin:1.5.7')
 		classpath("io.spring.gradle:docbook-reference-plugin:0.3.0")
 		classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
-	}
-}
-
-def sampleServerProjects() {
-	subprojects.findAll { project ->
-		project.name.contains('sec-server') && project.name != 'spring-security-kerberos-samples'
-	}
-}
-
-def sampleClientProjects() {
-	subprojects.findAll { project ->
-		project.name.contains('sec-client')
 	}
 }
 
@@ -31,8 +19,8 @@ configure(allprojects) {
 
 	group = 'org.springframework.security.kerberos'
 
-	sourceCompatibility=1.6
-	targetCompatibility=1.6
+	sourceCompatibility=1.7
+	targetCompatibility=1.7
 
 	[compileJava]*.options*.compilerArgs = ['-Xlint:none']
 
@@ -135,55 +123,6 @@ project('spring-security-kerberos-client') {
 	}
 }
 
-configure(sampleServerProjects()) {
-	apply plugin: 'spring-boot'
-	// don't publish boot packaged samples
-	configurations.archives.artifacts.removeAll { it.type == 'jar' }
-	tasks.findByPath("artifactoryPublish")?.enabled = false
-	dependencies {
-		compile project(":spring-security-kerberos-samples")
-		compile project(":spring-security-kerberos-client")
-		compile project(":spring-security-kerberos-web")
-		compile "org.springframework.boot:spring-boot-starter-thymeleaf:$springBootVersion"
-		compile "org.springframework.security:spring-security-config:$springSecurityVersion"
-		compile "org.springframework.security:spring-security-ldap:$springSecurityVersion"
-		compile "org.springframework:spring-beans:$springVersion"
-		compile "org.springframework:spring-aop:$springVersion"
-		compile "org.springframework:spring-expression:$springVersion"
-		compile "org.springframework:spring-context:$springVersion"
-		compile "org.springframework:spring-tx:$springVersion"
-		compile "org.springframework:spring-jdbc:$springVersion"
-		testCompile "org.springframework:spring-test:$springVersion"
-		testCompile "org.hamcrest:hamcrest-core:$hamcrestVersion"
-		testCompile "org.hamcrest:hamcrest-library:$hamcrestVersion"
-		testCompile "junit:junit:$junitVersion"
-	}
-}
-
-configure(sampleClientProjects()) {
-	apply plugin: 'spring-boot'
-	// don't publish boot packaged samples
-	configurations.archives.artifacts.removeAll { it.type == 'jar' }
-	tasks.findByPath("artifactoryPublish")?.enabled = false
-	dependencies {
-		compile project(":spring-security-kerberos-samples")
-		compile project(":spring-security-kerberos-client")
-		compile "org.springframework:spring-tx:$springVersion"
-		compile "org.springframework:spring-jdbc:$springVersion"
-		compile "org.springframework.boot:spring-boot-starter:$springBootVersion"
-		compile "org.springframework:spring-beans:$springVersion"
-		compile "org.springframework:spring-aop:$springVersion"
-		compile "org.springframework:spring-expression:$springVersion"
-		compile "org.springframework:spring-context:$springVersion"
-		compile "org.springframework:spring-tx:$springVersion"
-		compile "org.springframework:spring-jdbc:$springVersion"
-		testCompile "org.springframework:spring-test:$springVersion"
-		testCompile "org.hamcrest:hamcrest-core:$hamcrestVersion"
-		testCompile "org.hamcrest:hamcrest-library:$hamcrestVersion"
-		testCompile "junit:junit:$junitVersion"
-	}
-}
-
 configure(rootProject) {
 	description = 'Spring Security Kerberos Extension'
 
@@ -202,7 +141,7 @@ configure(rootProject) {
 	}
 
 	asciidoctorj {
-		version = '1.5.2'
+		version = '1.5.7'
 	}
 
 	// don't publish the default jar for the root project
